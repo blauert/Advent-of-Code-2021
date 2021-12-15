@@ -36,13 +36,11 @@ print(f"Part 1: {result}")
 
 # Part 2
 
-# Last element
-dummy = template[-1] + 'X'  # 'BX'
+# Last element (does not get modified)
+last_elem = template[-1]
 
-# Counter({'NN': 1, 'NC': 1, 'CB': 1, 'BX': 1})
-polymer = Counter([template[i] + template[i+1]
-                  for i in range(len(template)-1)])
-polymer[dummy] += 1
+# Counter({'NN': 1, 'NC': 1, 'CB': 1})
+polymer = Counter([template[i] + template[i+1] for i in range(len(template)-1)])
 
 # {'CH': ['CB', 'BH'], 'HH': ['HN', 'NH'], 'CB': ['CH', 'HB'], ... }
 rules2 = {pair: [pair[0]+elem, elem+pair[1]] for pair, elem in rules.items()}
@@ -51,18 +49,14 @@ rules2 = {pair: [pair[0]+elem, elem+pair[1]] for pair, elem in rules.items()}
 for i in range(40):
     temp = Counter()
     for pair, count in polymer.items():
-        if pair != dummy and count > 0:
-            temp[rules2[pair][0]] += count
-            temp[rules2[pair][1]] += count
-        elif pair == dummy:
-            temp[dummy] += 1
+        temp[rules2[pair][0]] += count
+        temp[rules2[pair][1]] += count
     polymer = temp
 
 # Count
-elem_count = Counter()
+elem_count = Counter(last_elem)  # account for last element
 for pair, count in polymer.items():
-    if count > 0:
-        elem_count[pair[0]] += count
+    elem_count[pair[0]] += count
 
 result = elem_count.most_common(1)[0][1] - elem_count.most_common()[-1][1]
 print(f"Part 2: {result}")
