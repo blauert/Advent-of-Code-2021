@@ -52,6 +52,51 @@ def get_length_type(packet, packet_len):
     return length_type_id, packet_len
 
 
+def get_subp_len(packet, packet_len):
+    # Next 15 bits = total length of following subpackets
+    subp_mask = int('111111111111111', 2) << packet_len - 15
+    subp_len = (packet & subp_mask) >> packet_len - 15
+    packet_len -= 15
+    return subp_len, packet_len
+
+
+def get_subp_num(packet, packet_len):
+    # Next 11 bits = number of subpackets
+    subp_mask = int('11111111111', 2) << packet_len - 11
+    subp_num = (packet & subp_mask) >> packet_len - 11
+    packet_len -= 11
+    return subp_num, packet_len
+
+
+def calculate_value(subp_values, type_id):
+    if type_id == 0:  # sum
+        value = sum(subp_values)
+    elif type_id == 1:  # product
+        value = 1
+        for i in subp_values:
+            value *= i
+    elif type_id == 2:  # minimum
+        value = min(subp_values)
+    elif type_id == 3:  # maximum
+        value = max(subp_values)
+    elif type_id == 5:  # greater than
+        if subp_values[0] > subp_values[1]:
+            value = 1
+        else:
+            value = 0
+    elif type_id == 6:  # less than
+        if subp_values[0] < subp_values[1]:
+            value = 1
+        else:
+            value = 0
+    elif type_id == 7:  # equal to
+        if subp_values[0] == subp_values[1]:
+            value = 1
+        else:
+            value = 0
+    return value
+
+
 def decode_packet(packet, packet_len):
 
     global version_numbers  # Part 1
@@ -68,53 +113,22 @@ def decode_packet(packet, packet_len):
     else:
         subp_values = []
 
+        # Get subpackets
         length_type_id, packet_len = get_length_type(packet, packet_len)
-
         if length_type_id == 0:
-            # Next 15 bits = total length of following subpackets
-            subp_mask = int('111111111111111', 2) << packet_len - 15
-            subp_len = (packet & subp_mask) >> packet_len - 15
-            packet_len -= 15
+            subp_len, packet_len = get_subp_len(packet, packet_len)
             end_len = packet_len - subp_len
             while packet_len > end_len:
                 packet_len, value = decode_packet(packet, packet_len)
                 subp_values.append(value)
-
         elif length_type_id == 1:
-            # Next 11 bits = number of subpackets
-            subp_mask = int('11111111111', 2) << packet_len - 11
-            no_subp = (packet & subp_mask) >> packet_len - 11
-            packet_len -= 11
-            for i in range(no_subp):
+            subp_num, packet_len = get_subp_num(packet, packet_len)
+            for i in range(subp_num):
                 packet_len, value = decode_packet(packet, packet_len)
                 subp_values.append(value)
 
         # Evaluate expression on sub-packet values
-        if type_id == 0:  # sum
-            value = sum(subp_values)
-        elif type_id == 1:  # product
-            value = 1
-            for i in subp_values:
-                value *= i
-        elif type_id == 2:  # minimum
-            value = min(subp_values)
-        elif type_id == 3:  # maximum
-            value = max(subp_values)
-        elif type_id == 5:  # greater than
-            if subp_values[0] > subp_values[1]:
-                value = 1
-            else:
-                value = 0
-        elif type_id == 6:  # less than
-            if subp_values[0] < subp_values[1]:
-                value = 1
-            else:
-                value = 0
-        elif type_id == 7:  # equal to
-            if subp_values[0] == subp_values[1]:
-                value = 1
-            else:
-                value = 0
+        value = calculate_value(subp_values, type_id)
 
     return packet_len, value
 
