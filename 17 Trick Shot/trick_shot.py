@@ -9,9 +9,17 @@ with open(input_file) as file:
     target = file.read()
 
 target_re = re.compile('target area: x=(\d+)\.\.(\d+), y=(-\d+)\.\.(-\d+)')
-t = target_re.search(target)
-tx1, tx2, ty1, ty2 = int(t[1]), int(t[2]), int(t[3]), int(t[4])
+tx1, tx2, ty1, ty2 = [int(i) for i in target_re.findall(target)[0]]
 
+
+# Part1 (Analytic)
+
+y_vel_max = abs(ty1)-1  # Max y vel w/o overshooting hits bottom row of target.
+
+print(f"Highest point: {((y_vel_max**2)+y_vel_max)//2}")
+
+
+# Part 2 (Brute Force)
 
 def shoot(x_vel, y_vel):
     x = 0
@@ -35,38 +43,23 @@ def check_hit(x, y):
         return False
 
 
-# Part1 
-
-# Find range of possible values for x velocity
+# Min x vel w/o undershooting
 x_vel_min = 0
 x_shot = 0
 while x_shot < tx1:
     x_vel_min += 1
     x_shot = ((x_vel_min**2)+x_vel_min)//2
-x_vel_max = x_vel_min
-while x_shot < tx2:
-    x_vel_max += 1
-    x_shot = ((x_vel_max**2)+x_vel_max)//2
-# Find maximum possible y velocity
-y_vel_max = abs(ty1)
 
-# Try tickshots
-highest_point = 0
-for x_vel in range(x_vel_min, x_vel_max+1):
-    for y_vel in range(0, y_vel_max):
-        x, y, hp = shoot(x_vel, y_vel)
-        if check_hit(x, y):
-            if hp > highest_point:
-                highest_point = hp
+# Max x velocity w/o overshooting
+x_vel_max = tx2
 
-print(f"Highest point: {highest_point}")
-
-
-# Part 2
+# Range of possible y velocities w/o overshooting
+y_vel_min = ty1  # max negative y vel
+y_vel_max = abs(ty1)-1  # max positive y vel
 
 num_velocities = 0
-for x_vel in range(x_vel_min, tx2+1):
-    for y_vel in range(ty1, y_vel_max):
+for x_vel in range(x_vel_min, x_vel_max+1):
+    for y_vel in range(y_vel_min, y_vel_max+1):
         x, y, hp = shoot(x_vel, y_vel)
         if check_hit(x, y):
             num_velocities += 1
