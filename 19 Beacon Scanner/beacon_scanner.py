@@ -10,16 +10,30 @@ with open(input_file) as file:
     input_lines = [line.strip().split(',') for line in file.readlines()]
 
 
-class Map:
+class DeepSeaCoords:
+    def get_distance(self, pair):
+        x0, y0, z0 = pair[0][0], pair[0][1], pair[0][2]
+        x1, y1, z1 = pair[1][0], pair[1][1], pair[1][2]
+        if (x1 > x0) or ((x1 == x0) and (y1 > y0)) or ((x1 == x0) and (y1 == y0) and (z1 > z0)):
+            hi, lo = pair[1], pair[0]
+        else:
+            hi, lo = pair[0], pair[1]
+        return (lo, hi), (hi[0]-lo[0], hi[1]-lo[1], hi[2]-lo[2])
+
+
+class Map(DeepSeaCoords):
     def __init__(self, beacons):
         self.scanners = [(0, 0, 0)]
         self.beacons = set(beacons)
         self.distances = set()
-        self.distances_to_coords = {}
+        self.distances_to_coords = {}  # Good to know: distances between any two points are unique
+        self.update_distances()
+
+    def update_distances(self):
         for pair in combinations(self.beacons, 2):
-            distance = get_distance(pair)
+            ordered_pair, distance = self.get_distance(pair)
             self.distances.add(distance)
-            self.distances_to_coords[distance] = pair  # Good to know: distances between any two points are unique
+            self.distances_to_coords[distance] = ordered_pair
 
     def add_scanner(self, scanner):
         success = False
@@ -30,19 +44,15 @@ class Map:
                 break
         if not success:
             return False
+
         # Get current scanner offset
         dist = overlap.pop()  # Pick a point at random and match coordinates
         scanned_coords = scanner.distances_to_coords[or_id][dist]
         real_coords = self.distances_to_coords[dist]
-        if real_coords[0][0] >= real_coords[1][0]:
-            lo = real_coords[0]
-        else:
-            lo = real_coords[1]
-        if scanned_coords[0][0] >= scanned_coords[1][0]:            
-            hi = scanned_coords[0]
-        else:
-            hi = scanned_coords[1]
-        offset = (hi[0]-lo[0], hi[1]-lo[1], hi[2]-lo[2])
+        a = scanned_coords[0]
+        b = real_coords[0]
+        offset = (a[0]-b[0], a[1]-b[1], a[2]-b[2])
+
         # Add current scanner
         self.scanners.append(offset)
         # Update beacon coords
@@ -53,54 +63,40 @@ class Map:
             updated_beacons.append(updated_coords)
             self.beacons.add(updated_coords)
         # Update distances
-        self.distances = set()
-        self.distances_to_coords = {}
-        for pair in combinations(self.beacons, 2):
-            distance = get_distance(pair)
-            self.distances.add(distance)
-            self.distances_to_coords[distance] = pair
+        self.update_distances()
         return True
 
 
-class Scanner:
+class Scanner(DeepSeaCoords):
     def __init__(self, beacons):
         # 24 possible orientations are numbered by id 0-23
         self.orientations = defaultdict(list)  # {id: [beacons], id: [beacons]}
         self.distances = {}  # {id: {distances}, id: {distances}}
         self.distances_to_coords = {}  # {id: {distance: pair}, id: {distance: pair}}
+
         for beacon in beacons:
-            coords_rotated = rotate(beacon)
+            coords_rotated = self.rotate(beacon)
             for i in range(24):
                 self.orientations[i].append(coords_rotated[i])
+
         for orientation_id, unknown_beacons in self.orientations.items():
             self.distances[orientation_id] = set()
             self.distances_to_coords[orientation_id] = {}
             for pair in combinations(unknown_beacons, 2):
-                distance = get_distance(pair)
+                ordered_pair, distance = self.get_distance(pair)
                 self.distances[orientation_id].add(distance)
-                self.distances_to_coords[orientation_id][distance] = pair
+                self.distances_to_coords[orientation_id][distance] = ordered_pair
 
-
-def rotate(coords):
-    x, y, z = coords
-    return [
-        (x, y, z), (y, -x, z), (-x, -y, z), (-y, x, z),  # rotate around z axis
-        (y, x, -z), (x, -y, -z), (-y, -x, -z), (-x, y, -z),  # -z axis
-        (z, x, y), (x, -z, y), (-z, -x, y), (-x, z, y),  # y axis
-        (x, z, -y), (z, -x, -y), (-x, -z, -y), (-z, x, -y),  # -y axis
-        (y, z, x), (z, -y, x), (-y, -z, x), (-z, y, x),  # x axis
-        (z, y, -x), (y, -z, -x), (-z, -y, -x), (-y, z, -x)  # -x axis
-    ]
-
-
-def get_distance(pair):
-    x0, y0, z0 = pair[0][0], pair[0][1], pair[0][2]
-    x1, y1, z1 = pair[1][0], pair[1][1], pair[1][2]
-    if (x1 > x0) or ((x1 == x0) and (y1 > y0)) or ((x1 == x0) and (y1 == y0) and (z1 > z0)):
-        hi, lo = pair[1], pair[0]
-    else:
-        hi, lo = pair[0], pair[1]
-    return (hi[0]-lo[0], hi[1]-lo[1], hi[2]-lo[2])
+    def rotate(self, coords):
+        x, y, z = coords
+        return [
+            (x, y, z), (y, -x, z), (-x, -y, z), (-y, x, z),  # rotate around z axis
+            (y, x, -z), (x, -y, -z), (-y, -x, -z), (-x, y, -z),  # -z axis
+            (z, x, y), (x, -z, y), (-z, -x, y), (-x, z, y),  # y axis
+            (x, z, -y), (z, -x, -y), (-x, -z, -y), (-z, x, -y),  # -y axis
+            (y, z, x), (z, -y, x), (-y, -z, x), (-z, y, x),  # x axis
+            (z, y, -x), (y, -z, -x), (-z, -y, -x), (-y, z, -x)  # -x axis
+        ]
 
 
 # Setup
