@@ -9,6 +9,20 @@ input_file = 'real_input.txt'
 with open(input_file) as file:
     input_lines = [line.strip().split(',') for line in file.readlines()]
 
+scanner0_beacons = []
+scanner0_done = False
+unknown_beacons = []
+for line in input_lines:
+    if len(line) == 3:
+        beacon = tuple(int(i) for i in line)
+        if not scanner0_done:
+            scanner0_beacons.append(beacon)
+        else:
+            unknown_beacons[-1].append(beacon)
+    elif line == ['']:
+        scanner0_done = True
+        unknown_beacons.append([])
+
 
 class DeepSeaCoords:
     def get_distance(self, pair):
@@ -99,21 +113,7 @@ class Scanner(DeepSeaCoords):
         ]
 
 
-# Setup
-
-scanner0_beacons = []
-scanner0_done = False
-unknown_beacons = []
-for line in input_lines:
-    if len(line) == 3:
-        beacon = tuple(int(i) for i in line)
-        if not scanner0_done:
-            scanner0_beacons.append(beacon)
-        else:
-            unknown_beacons[-1].append(beacon)
-    elif line == ['']:
-        scanner0_done = True
-        unknown_beacons.append([])
+# Part 1
 
 beacon_map = Map(scanner0_beacons)
 scanners = deque()
@@ -124,9 +124,6 @@ while scanners:
     scanner = scanners.popleft()
     if not beacon_map.add_scanner(scanner):
         scanners.append(scanner)
-
-
-# Part 1
 
 print(f"Number of beacons: {len(beacon_map.beacons)}")
 
