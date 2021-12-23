@@ -58,11 +58,17 @@ class Map(DeepSeaCoords):
                 break
         if not success:
             return False
-
-        # Get current scanner offset
-        dist = overlap.pop()  # Pick a point at random and match coordinates
+        
+        """From matched distances, pick a point at random and match coordinates
+        
+        If distances between points were NOT globally unique (as they are in this exercise),
+        one could get the offsets for ALL overlapping distances and use Counter.most_common()
+        to filter out false positives.
+        """
+        dist = overlap.pop()
         scanned_coords = scanner.distances_to_coords[or_id][dist]
         real_coords = self.distances_to_coords[dist]
+        # Get current scanner offset
         a = scanned_coords[0]
         b = real_coords[0]
         offset = (a[0]-b[0], a[1]-b[1], a[2]-b[2])
