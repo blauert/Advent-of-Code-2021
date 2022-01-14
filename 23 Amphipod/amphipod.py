@@ -1,6 +1,7 @@
 # https://adventofcode.com/2021/day/23
 
 from collections import defaultdict
+import heapq
 
 input_file, input_file_2 = 'real_input.txt', 'real_input_part2.txt'
 #input_file, input_file_2 = 'test_input.txt', 'test_input_part2.txt'
@@ -262,17 +263,21 @@ class Burrow2:
 
 
 def find_least_energy(burrow, part=1):
-    burrows = [burrow]
+    # https://docs.python.org/3/library/heapq.html?highlight=tie-breaker#priority-queue-implementation-notes
+    tie_breaker = 0
+    min_burrows = [(0, tie_breaker, burrow)]
     least_energy = float('inf')
-    simulations_done = {}
+    processed = set()
     if part == 1:
         Burr = Burrow
     elif part == 2:
         Burr = Burrow2
-    while burrows:
-        curr = burrows.pop()
-        if curr.energy >= least_energy:
+    while min_burrows:
+        curr_energy, br, curr = heapq.heappop(min_burrows)
+        configuration = str(curr)
+        if configuration in processed:
             continue
+        processed.add(configuration)
         graph = curr.generate_graph()
         for old_space, moves in graph.items():
             for new_space, energy in moves.items():
@@ -285,10 +290,10 @@ def find_least_energy(burrow, part=1):
                         least_energy = new_energy
                     else:
                         configuration = str(new_burrow)
-                        prev_energy = simulations_done.get(configuration)
-                        if prev_energy is None or new_energy < prev_energy:
-                            simulations_done[configuration] = new_energy
-                            burrows.append(new_burrow)
+                        if configuration in processed:
+                            continue
+                        tie_breaker += 1
+                        heapq.heappush(min_burrows, (new_energy, tie_breaker, new_burrow))
     return least_energy
 
 
