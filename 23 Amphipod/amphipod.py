@@ -22,9 +22,8 @@ class Burrow:
           a   b   c   d
     """
 
-    def __init__(self, amphipods, energy=0):
+    def __init__(self, amphipods):
         self.amphipods = amphipods
-        self.energy = energy
         self.done = self._check_done_()
 
     def __repr__(self):
@@ -134,9 +133,8 @@ class Burrow2:
           a   b   c   d
     """
 
-    def __init__(self, amphipods, energy=0):
+    def __init__(self, amphipods):
         self.amphipods = amphipods
-        self.energy = energy
         self.done = self._check_done_()
 
     def __repr__(self):
@@ -281,11 +279,11 @@ def find_least_energy(burrow, part=1):
         graph = curr.generate_graph()
         for old_space, moves in graph.items():
             for new_space, energy in moves.items():
-                new_energy = curr.energy + energy
+                new_energy = curr_energy + energy
                 if new_energy < least_energy:
                     new_amphipods = curr.amphipods.copy()
                     new_amphipods[new_space] = new_amphipods.pop(old_space)
-                    new_burrow = Burr(new_amphipods, energy=new_energy)
+                    new_burrow = Burr(new_amphipods)
                     if new_burrow.done == True:
                         least_energy = new_energy
                     else:
