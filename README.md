@@ -1,7 +1,7 @@
 # Advent of Code 2021
 https://adventofcode.com/2021
 
-| Day |  .py  | Notes |
+| Day |  .py  | Notes ✏️ |
 |:---:|:-----:|:------|
 |  1  | ⭐⭐ |  |
 |  2  | ⭐⭐ |  |
