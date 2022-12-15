@@ -24,6 +24,6 @@ https://adventofcode.com/2021
 |[19](./19%20Beacon%20Scanner/)|⭐⭐|Map from relative coords w/ unknown orientation 🛰️|
 |[20](./20%20Trench%20Map/)|⭐⭐|Infinite image padding|
 |[21](./21%20Dirac%20Dice/)|⭐⭐||
-|[22](./22%20Reactor%20Reboot/)|⭐⭐|Overlapping cuboids 🧊|
+|[22](./22%20Reactor%20Reboot/)|⭐⭐|Overlapping cuboids; operator overloading 🧊|
 |[23](./23%20Amphipod/)|⭐⭐|Graphs, heapq w/ tie breaker 🦐|
-|[24](./24%20Arithmetic%20Logic%20Unit/)||Reverse engineering|
+|[24](./24%20Arithmetic%20Logic%20Unit/)||Reverse engineering; tests|
